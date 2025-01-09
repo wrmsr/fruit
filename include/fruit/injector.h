@@ -232,10 +232,13 @@ private:
   // Force instantiation of Check2.
   static_assert(true || sizeof(Check2), "");
   using Check3 = typename fruit::impl::meta::CheckIfError<fruit::impl::meta::Eval<fruit::impl::meta::If(
-      fruit::impl::meta::Not(fruit::impl::meta::IsEmptySet(typename Comp::RsSuperset)),
-      fruit::impl::meta::ConstructErrorWithArgVector(fruit::impl::InjectorWithRequirementsErrorTag,
-                                                     fruit::impl::meta::SetToVector(typename Comp::RsSuperset)),
-      VoidType)>>::type;
+    fruit::impl::meta::Not(fruit::impl::meta::IsEmptySet(typename Comp::RsSuperset)),
+    fruit::impl::meta::ConstructErrorWithArgVector(
+      fruit::impl::InjectorWithRequirementsErrorTag,
+      fruit::impl::meta::SetToVector(typename Comp::RsSuperset)
+    ),
+    VoidType
+  )>>::type;
   // Force instantiation of Check3.
   static_assert(true || sizeof(Check3), "");
 

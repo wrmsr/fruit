@@ -933,9 +933,13 @@ public:
 
   public:
     template <typename... FormalArgs, typename... Args>
-    PartialComponent<fruit::impl::ReplaceComponent<ReplacedComponent(GetReplacedComponentFormalArgs...),
-                                                   ReplacedComponent(FormalArgs...)>,
-                     Bindings...>
+    PartialComponent<
+      fruit::impl::ReplaceComponent<
+        ReplacedComponent(GetReplacedComponentFormalArgs...),
+        ReplacedComponent(FormalArgs...)
+      >,
+      Bindings...
+    >
     with(ReplacedComponent (*)(FormalArgs...), Args&&... args);
 
     PartialComponentWithReplacementInProgress(storage_t storage) // NOLINT(google-explicit-constructor)
@@ -1046,7 +1050,9 @@ public:
    */
   template <typename... OtherComponentParams, typename... FormalArgs, typename... Args>
   typename PartialComponent<Bindings...>::template PartialComponentWithReplacementInProgress<
-      fruit::Component<OtherComponentParams...>, FormalArgs...>
+    fruit::Component<OtherComponentParams...>,
+    FormalArgs...
+  >
   replace(fruit::Component<OtherComponentParams...> (*)(FormalArgs...), Args&&... args);
 
   ~PartialComponent() = default;

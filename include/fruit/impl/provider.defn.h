@@ -25,8 +25,10 @@
 namespace fruit {
 
 template <typename C>
-inline Provider<C>::Provider(fruit::impl::InjectorStorage* storage,
-                             fruit::impl::InjectorStorage::Graph::node_iterator itr)
+inline Provider<C>::Provider(
+  fruit::impl::InjectorStorage* storage,
+  fruit::impl::InjectorStorage::Graph::node_iterator itr
+)
     : storage(storage), itr(itr) {}
 
 template <typename C>
@@ -39,14 +41,19 @@ namespace meta {
 
 template <typename C>
 struct ProviderImplHelper {
-
   template <typename T>
   using CheckGet = Eval<PropagateError(
-      CheckInjectableType(RemoveAnnotations(Type<T>)),
-      If(Not(IsSame(GetClassForType(Type<T>), RemoveConstFromType(Type<C>))),
-         ConstructError(Id<TypeNotProvidedErrorTag>, Type<T>),
-         If(And(TypeInjectionRequiresNonConstBinding(Type<T>), Not(IsSame(Id<GetClassForType(Type<T>)>, Type<C>))),
-            ConstructError(TypeProvidedAsConstOnlyErrorTag, Type<T>), None)))>;
+    CheckInjectableType(RemoveAnnotations(Type<T>)),
+    If(
+      Not(IsSame(GetClassForType(Type<T>), RemoveConstFromType(Type<C>))),
+      ConstructError(Id<TypeNotProvidedErrorTag>, Type<T>),
+      If(
+        And(TypeInjectionRequiresNonConstBinding(Type<T>), Not(IsSame(Id<GetClassForType(Type<T>)>, Type<C>))),
+        ConstructError(TypeProvidedAsConstOnlyErrorTag, Type<T>),
+        None
+      )
+    )
+  )>;
 };
 
 } // namespace meta

@@ -39,10 +39,10 @@ private:
     friend struct fruit::impl::ComponentStorageEntry;
 
 public:
-	// Prefer using the simpler componentFunction() below instead of this.
-	template <typename... ActualArgs>
-    static ComponentFunction<ComponentType, ComponentFunctionArgs...> create(
-		ComponentType (*getComponent)(ComponentFunctionArgs...), ActualArgs&&... args);
+    // Prefer using the simpler componentFunction() below instead of this.
+    template <typename... ActualArgs>
+    static ComponentFunction<ComponentType, ComponentFunctionArgs...>
+    create(ComponentType (*getComponent)(ComponentFunctionArgs...), ActualArgs&&... args);
 
     ComponentFunction(const ComponentFunction&) = default;
     ComponentFunction(ComponentFunction&&) noexcept = default;
@@ -63,8 +63,9 @@ public:
  */
 template <typename... ComponentParams, typename... FormalArgs, typename... ActualArgs>
 ComponentFunction<fruit::Component<ComponentParams...>, FormalArgs...> componentFunction(
-    fruit::Component<ComponentParams...> (*getComponent)(FormalArgs...),
-    ActualArgs&&... args);
+ fruit::Component<ComponentParams...> (*getComponent)(FormalArgs...),
+ ActualArgs&&... args
+);
 
 }
 

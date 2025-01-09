@@ -24,8 +24,7 @@ namespace impl {
 
 template <typename T>
 struct RemoveAnnotationsHelper {
-  using type = fruit::impl::meta::UnwrapType<
-      fruit::impl::meta::Eval<fruit::impl::meta::RemoveAnnotations(fruit::impl::meta::Type<T>)>>;
+  using type = fruit::impl::meta::UnwrapType<fruit::impl::meta::Eval<fruit::impl::meta::RemoveAnnotations(fruit::impl::meta::Type<T>)>>;
 };
 template <typename T>
 using RemoveAnnotations = typename RemoveAnnotationsHelper<T>::type;
