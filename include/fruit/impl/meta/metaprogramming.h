@@ -160,9 +160,15 @@ struct FunctionSignature {
   template <typename Function>
   struct apply<Type<Function>> {
     using CandidateSignature = FunctionSignatureHelper(GetCallOperatorSignature(Type<Function>));
-    using type = If(Not(IsCallable(Type<Function>)), ConstructError(NotALambdaErrorTag, Type<Function>),
-                    If(Not(IsConstructible(AddPointer(CandidateSignature), Type<Function>)),
-                       ConstructError(FunctorUsedAsProviderErrorTag, Type<Function>), CandidateSignature));
+    using type = If(
+      Not(IsCallable(Type<Function>)),
+      ConstructError(NotALambdaErrorTag, Type<Function>),
+      If(
+        Not(IsConstructible(AddPointer(CandidateSignature), Type<Function>)),
+        ConstructError(FunctorUsedAsProviderErrorTag, Type<Function>),
+        CandidateSignature
+      )
+    );
   };
 
   template <typename Result, typename... Args>

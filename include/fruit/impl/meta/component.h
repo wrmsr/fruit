@@ -406,8 +406,10 @@ struct RequiredLambdaArgsForAssistedFactory {
 struct RequiredLambdaSignatureForAssistedFactory {
   template <typename AnnotatedSignature>
   struct apply {
-    using type = ConsSignatureWithVector(RemoveAnnotations(SignatureType(AnnotatedSignature)),
-                                         RequiredLambdaArgsForAssistedFactory(AnnotatedSignature));
+    using type = ConsSignatureWithVector(
+      RemoveAnnotations(SignatureType(AnnotatedSignature)),
+      RequiredLambdaArgsForAssistedFactory(AnnotatedSignature)
+    );
   };
 };
 
@@ -421,8 +423,10 @@ struct InjectedFunctionArgsForAssistedFactory {
 struct InjectedSignatureForAssistedFactory {
   template <typename AnnotatedSignature>
   struct apply {
-    using type = ConsSignatureWithVector(RemoveAnnotations(SignatureType(AnnotatedSignature)),
-                                         InjectedFunctionArgsForAssistedFactory(AnnotatedSignature));
+    using type = ConsSignatureWithVector(
+      RemoveAnnotations(SignatureType(AnnotatedSignature)),
+      InjectedFunctionArgsForAssistedFactory(AnnotatedSignature)
+    );
   };
 };
 
@@ -502,16 +506,30 @@ struct GetInjectAnnotation {
     using SArgs = RemoveAnnotationsFromVector(UnlabelAssisted(AnnotatedSArgs));
     // We replace the non-annotated return type with the potentially-annotated AnnotatedC.
     using AnnotatedDecoratedS = ConsSignatureWithVector(AnnotatedC, AnnotatedSArgs);
-    using type = If(IsAbstract(C), ConstructError(CannotConstructAbstractClassErrorTag, C),
-                    If(Not(IsValidSignature(DecoratedS)),
-                       ConstructError(InjectTypedefNotASignatureErrorTag, C, DecoratedS),
-                       If(Not(IsSame(SResult, RemoveAnnotations(SResult))),
-                          ConstructError(InjectTypedefWithAnnotationErrorTag, C),
-                          If(Not(IsSame(C, SResult)), ConstructError(InjectTypedefForWrongClassErrorTag, C, SResult),
-                             If(Not(IsConstructibleWithVector(C, SArgs)),
-                                ConstructError(NoConstructorMatchingInjectSignatureErrorTag, C,
-                                               ConsSignatureWithVector(SResult, SArgs)),
-                                AnnotatedDecoratedS)))));
+    using type = If(
+      IsAbstract(C),
+      ConstructError(CannotConstructAbstractClassErrorTag, C),
+      If(
+        Not(IsValidSignature(DecoratedS)),
+        ConstructError(InjectTypedefNotASignatureErrorTag, C, DecoratedS),
+        If(
+          Not(IsSame(SResult, RemoveAnnotations(SResult))),
+          ConstructError(InjectTypedefWithAnnotationErrorTag, C),
+          If(
+            Not(IsSame(C, SResult)),
+            ConstructError(InjectTypedefForWrongClassErrorTag, C, SResult),
+            If(
+              Not(IsConstructibleWithVector(C, SArgs)),
+              ConstructError(
+                NoConstructorMatchingInjectSignatureErrorTag, C,
+                ConsSignatureWithVector(SResult, SArgs)
+              ),
+              AnnotatedDecoratedS
+            )
+          )
+        )
+      )
+    );
   };
 };
 
@@ -519,11 +537,16 @@ struct GetInjectAnnotation {
 // Part 2: Type functors involving at least one ConsComp.
 //********************************************************************************************************************************
 
-template <typename RsSupersetParam, typename PsParam, typename NonConstRsPsParam,
+template <
+  typename RsSupersetParam,
+  typename PsParam,
+  typename NonConstRsPsParam,
 #if !FRUIT_NO_LOOP_CHECK
-          typename DepsParam,
+  typename DepsParam,
 #endif
-          typename InterfaceBindingsParam, typename DeferredBindingFunctorsParam>
+  typename InterfaceBindingsParam,
+  typename DeferredBindingFunctorsParam
+>
 struct Comp {
   // The actual set of requirements is SetDifference(RsSuperset, Ps)
   // We don't store Rs explicitly because we'd need to remove elements very often (and that's slow).
@@ -559,17 +582,27 @@ struct Comp {
 // Using ConsComp instead of Comp<...> in a meta-expression allows the types to be evaluated.
 // See ConsVector for more details.
 struct ConsComp {
-  template <typename RsSupersetParam, typename PsParam, typename NonConstRsPsParam,
+  template <
+    typename RsSupersetParam,
+    typename PsParam,
+    typename NonConstRsPsParam,
 #if !FRUIT_NO_LOOP_CHECK
-            typename DepsParam,
+    typename DepsParam,
 #endif
-            typename InterfaceBindingsParam, typename DeferredBindingFunctorsParam>
+    typename InterfaceBindingsParam,
+    typename DeferredBindingFunctorsParam
+>
   struct apply {
-    using type = Comp<RsSupersetParam, PsParam, NonConstRsPsParam,
+    using type = Comp<
+      RsSupersetParam,
+      PsParam,
+      NonConstRsPsParam,
 #if !FRUIT_NO_LOOP_CHECK
-                      DepsParam,
+      DepsParam,
 #endif
-                      InterfaceBindingsParam, DeferredBindingFunctorsParam>;
+      InterfaceBindingsParam,
+      DeferredBindingFunctorsParam
+    >;
   };
 };
 
@@ -666,11 +699,18 @@ struct CheckNormalizedTypes {
       template <typename CurrentResult, typename T>
       struct apply {
         using NormalizedType = NormalizeType(T);
-        using type = PropagateError(CheckInjectableType(RemoveAnnotations(NormalizeUntilStable(T))),
-                                    If(Not(IsSame(NormalizeType(T), T)),
-                                       ConstructError(NonClassTypeErrorTag, RemoveAnnotations(T),
-                                                      RemoveAnnotations(NormalizeUntilStable(T))),
-                                       CurrentResult));
+        using type = PropagateError(
+          CheckInjectableType(RemoveAnnotations(NormalizeUntilStable(T))),
+          If(
+            Not(IsSame(NormalizeType(T), T)),
+            ConstructError(
+              NonClassTypeErrorTag,
+              RemoveAnnotations(T),
+              RemoveAnnotations(NormalizeUntilStable(T))
+            ),
+            CurrentResult
+          )
+        );
       };
     };
 
@@ -690,8 +730,11 @@ struct CheckNotAnnotatedTypes {
       template <typename CurrentResult, typename T>
       struct apply {
         using TypeWithoutAnnotations = RemoveAnnotations(T);
-        using type = If(Not(IsSame(TypeWithoutAnnotations, T)),
-                        ConstructError(AnnotatedTypeErrorTag, T, TypeWithoutAnnotations), CurrentResult);
+        using type = If(
+          Not(IsSame(TypeWithoutAnnotations, T)),
+          ConstructError(AnnotatedTypeErrorTag, T, TypeWithoutAnnotations),
+          CurrentResult
+        );
       };
     };
 
@@ -840,31 +883,48 @@ struct ConstructComponentImpl {
   template <typename... Ps>
   struct apply {
     using type = PropagateError(
-        CheckNoRepeatedTypes(RemoveConstFromTypes(Vector<Ps...>)),
-        PropagateError(CheckNormalizedTypes(RemoveConstFromTypes(Vector<Ps...>)),
-                       PropagateError(CheckNoRequiredTypesInComponentArguments(Vector<Ps...>),
-                                      ConsComp(EmptySet, VectorToSetUnchecked(RemoveConstFromTypes(Vector<Ps...>)),
-                                               RemoveConstTypes(Vector<Ps...>),
+      CheckNoRepeatedTypes(RemoveConstFromTypes(Vector<Ps...>)),
+      PropagateError(
+        CheckNormalizedTypes(RemoveConstFromTypes(Vector<Ps...>)),
+        PropagateError(
+          CheckNoRequiredTypesInComponentArguments(Vector<Ps...>),
+          ConsComp(
+            EmptySet,
+            VectorToSetUnchecked(RemoveConstFromTypes(Vector<Ps...>)),
+            RemoveConstTypes(Vector<Ps...>),
 #if !FRUIT_NO_LOOP_CHECK
-                                               Vector<Pair<Ps, Vector<>>...>,
+            Vector<Pair<Ps, Vector<>>...>,
 #endif
-                                               Vector<>, EmptyList))));
+            Vector<>,
+            EmptyList
+          )
+        )
+      )
+    );
   };
 
   // With requirements.
   template <typename... Rs, typename... Ps>
   struct apply<Type<Required<Rs...>>, Ps...> {
     using type1 = PropagateError(
-        CheckNoRepeatedTypes(RemoveConstFromTypes(Vector<Type<Rs>..., Ps...>)),
-        PropagateError(CheckNormalizedTypes(RemoveConstFromTypes(Vector<Type<Rs>..., Ps...>)),
-                       PropagateError(CheckNoRequiredTypesInComponentArguments(Vector<Ps...>),
-                                      ConsComp(VectorToSetUnchecked(RemoveConstFromTypes(Vector<Type<Rs>...>)),
-                                               VectorToSetUnchecked(RemoveConstFromTypes(Vector<Ps...>)),
-                                               RemoveConstTypes(Vector<Type<Rs>..., Ps...>),
+      CheckNoRepeatedTypes(RemoveConstFromTypes(Vector<Type<Rs>..., Ps...>)),
+      PropagateError(
+        CheckNormalizedTypes(RemoveConstFromTypes(Vector<Type<Rs>..., Ps...>)),
+        PropagateError(
+          CheckNoRequiredTypesInComponentArguments(Vector<Ps...>),
+          ConsComp(
+            VectorToSetUnchecked(RemoveConstFromTypes(Vector<Type<Rs>...>)),
+            VectorToSetUnchecked(RemoveConstFromTypes(Vector<Ps...>)),
+            RemoveConstTypes(Vector<Type<Rs>..., Ps...>),
 #if !FRUIT_NO_LOOP_CHECK
-                                               Vector<Pair<Ps, Vector<Type<Rs>...>>...>,
+            Vector<Pair<Ps, Vector<Type<Rs>...>>...>,
 #endif
-                                               Vector<>, EmptyList))));
+            Vector<>,
+            EmptyList
+          )
+        )
+      )
+    );
 
 #if !FRUIT_NO_LOOP_CHECK && FRUIT_EXTRA_DEBUG
     using Loop = ProofForestFindLoop(GetComponentDeps(type1));
@@ -881,8 +941,14 @@ struct CheckTypesNotProvidedAsConst {
     struct Helper {
       template <typename Acc, typename T>
       struct apply {
-        using type = If(And(IsInSet(T, typename Comp::Ps), Not(IsInSet(T, typename Comp::NonConstRsPs))),
-                        ConstructError(NonConstBindingRequiredButConstBindingProvidedErrorTag, T), Acc);
+        using type = If(
+          And(
+            IsInSet(T, typename Comp::Ps),
+            Not(IsInSet(T, typename Comp::NonConstRsPs))
+          ),
+          ConstructError(NonConstBindingRequiredButConstBindingProvidedErrorTag, T),
+          Acc
+        );
       };
     };
 
@@ -895,12 +961,16 @@ struct CheckTypesNotProvidedAsConst {
 struct AddRequirements {
   template <typename Comp, typename NewRequirementsVector, typename NewNonConstRequirementsVector>
   struct apply {
-    using Comp1 = ConsComp(FoldVector(NewRequirementsVector, AddToSet, typename Comp::RsSuperset), typename Comp::Ps,
-                           FoldVector(NewNonConstRequirementsVector, AddToSet, typename Comp::NonConstRsPs),
+    using Comp1 = ConsComp(
+      FoldVector(NewRequirementsVector, AddToSet, typename Comp::RsSuperset),
+      typename Comp::Ps,
+      FoldVector(NewNonConstRequirementsVector, AddToSet, typename Comp::NonConstRsPs),
 #if !FRUIT_NO_LOOP_CHECK
-                           typename Comp::Deps,
+      typename Comp::Deps,
 #endif
-                           typename Comp::InterfaceBindings, typename Comp::DeferredBindingFunctors);
+      typename Comp::InterfaceBindings,
+      typename Comp::DeferredBindingFunctors
+    );
     using type = PropagateError(CheckTypesNotProvidedAsConst(Comp, NewNonConstRequirementsVector), Comp1);
   };
 };
@@ -910,15 +980,24 @@ struct AddProvidedTypeIgnoringInterfaceBindings {
   template <typename Comp, typename C, typename IsNonConst, typename CRequirements, typename CNonConstRequirements>
   struct apply {
     using Comp1 = ConsComp(
-        FoldVector(CRequirements, AddToSet, typename Comp::RsSuperset), AddToSetUnchecked(typename Comp::Ps, C),
-        If(IsNonConst, AddToSetUnchecked(FoldVector(CNonConstRequirements, AddToSet, typename Comp::NonConstRsPs), C),
-           FoldVector(CNonConstRequirements, AddToSet, typename Comp::NonConstRsPs)),
+      FoldVector(CRequirements, AddToSet, typename Comp::RsSuperset),
+      AddToSetUnchecked(typename Comp::Ps, C),
+      If(
+        IsNonConst,
+        AddToSetUnchecked(FoldVector(CNonConstRequirements, AddToSet, typename Comp::NonConstRsPs), C),
+        FoldVector(CNonConstRequirements, AddToSet, typename Comp::NonConstRsPs)
+      ),
 #if !FRUIT_NO_LOOP_CHECK
-        PushFront(typename Comp::Deps, Pair<C, CRequirements>),
+      PushFront(typename Comp::Deps, Pair<C, CRequirements>),
 #endif
-        typename Comp::InterfaceBindings, typename Comp::DeferredBindingFunctors);
-    using type = If(IsInSet(C, typename Comp::Ps), ConstructError(TypeAlreadyBoundErrorTag, C),
-                    PropagateError(CheckTypesNotProvidedAsConst(Comp, CNonConstRequirements), Comp1));
+      typename Comp::InterfaceBindings,
+      typename Comp::DeferredBindingFunctors
+    );
+    using type = If(
+      IsInSet(C, typename Comp::Ps),
+      ConstructError(TypeAlreadyBoundErrorTag, C),
+      PropagateError(CheckTypesNotProvidedAsConst(Comp, CNonConstRequirements), Comp1)
+    );
   };
 };
 
@@ -929,10 +1008,17 @@ struct AddProvidedTypeIgnoringInterfaceBindings {
 struct AddProvidedType {
   template <typename Comp, typename C, typename IsNonConst, typename CRequirements, typename CNonConstRequirements>
   struct apply {
-    using type = If(Not(IsNone(FindInMap(typename Comp::InterfaceBindings, C))),
-                    ConstructError(TypeAlreadyBoundErrorTag, C),
-                    AddProvidedTypeIgnoringInterfaceBindings(Comp, C, IsNonConst, CRequirements,
-                                                             CNonConstRequirements));
+    using type = If(
+      Not(IsNone(FindInMap(typename Comp::InterfaceBindings, C))),
+      ConstructError(TypeAlreadyBoundErrorTag, C),
+      AddProvidedTypeIgnoringInterfaceBindings(
+        Comp,
+        C,
+        IsNonConst,
+        CRequirements,
+        CNonConstRequirements
+      )
+    );
   };
 };
 
@@ -940,11 +1026,16 @@ struct AddDeferredBinding {
   template <typename Comp, typename DeferredBinding>
   struct apply {
     using new_DeferredBindingFunctors = Cons<DeferredBinding, typename Comp::DeferredBindingFunctors>;
-    using type = ConsComp(typename Comp::RsSuperset, typename Comp::Ps, typename Comp::NonConstRsPs,
+    using type = ConsComp(
+      typename Comp::RsSuperset,
+      typename Comp::Ps,
+      typename Comp::NonConstRsPs,
 #if !FRUIT_NO_LOOP_CHECK
-                          typename Comp::Deps,
+      typename Comp::Deps,
 #endif
-                          typename Comp::InterfaceBindings, new_DeferredBindingFunctors);
+      typename Comp::InterfaceBindings,
+      new_DeferredBindingFunctors
+    );
   };
 };
 
@@ -999,9 +1090,11 @@ struct CheckComponentEntails {
 struct ConstructNoBindingFoundError {
   template <typename AnnotatedC>
   struct apply {
-    using type = If(IsAbstract(RemoveAnnotations(AnnotatedC)),
-                    ConstructError(NoBindingFoundForAbstractClassErrorTag, AnnotatedC, RemoveAnnotations(AnnotatedC)),
-                    ConstructError(NoBindingFoundErrorTag, AnnotatedC));
+    using type = If(
+      IsAbstract(RemoveAnnotations(AnnotatedC)),
+      ConstructError(NoBindingFoundForAbstractClassErrorTag, AnnotatedC, RemoveAnnotations(AnnotatedC)),
+      ConstructError(NoBindingFoundErrorTag, AnnotatedC)
+    );
   };
 };
 
