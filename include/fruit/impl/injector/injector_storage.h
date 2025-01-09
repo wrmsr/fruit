@@ -45,13 +45,12 @@ struct GetHelper;
 class InjectorStorage {
 public:
   // TODO: remove.
-  //  using BindingVectors = std::pair<std::vector<std::pair<TypeId, BindingData>>,
-  //                                   std::vector<std::pair<TypeId, MultibindingData>>>;
+  //  using BindingVectors = std::pair<std::vector<std::pair<TypeId, BindingData>>, std::vector<std::pair<TypeId, MultibindingData>>>;
   using Graph = SemistaticGraph<TypeId, NormalizedBinding>;
 
   template <typename AnnotatedT>
   using RemoveAnnotations = fruit::impl::meta::UnwrapType<
-      fruit::impl::meta::Eval<fruit::impl::meta::RemoveAnnotations(fruit::impl::meta::Type<AnnotatedT>)>>;
+    fruit::impl::meta::Eval<fruit::impl::meta::RemoveAnnotations(fruit::impl::meta::Type<AnnotatedT>)>>;
 
   // MSVC 14 has trouble specializing alias templates using expanded pack elements.
   // This is a known issue:
@@ -64,7 +63,7 @@ public:
 
   template <typename T>
   using NormalizeType = fruit::impl::meta::UnwrapType<
-      fruit::impl::meta::Eval<fruit::impl::meta::NormalizeType(fruit::impl::meta::Type<T>)>>;
+    fruit::impl::meta::Eval<fruit::impl::meta::NormalizeType(fruit::impl::meta::Type<T>)>>;
 
   template <typename T>
   struct TypeNormalizer {
@@ -73,11 +72,13 @@ public:
 
   template <typename Signature>
   using SignatureType = fruit::impl::meta::UnwrapType<
-      fruit::impl::meta::Eval<fruit::impl::meta::SignatureType(fruit::impl::meta::Type<Signature>)>>;
+    fruit::impl::meta::Eval<fruit::impl::meta::SignatureType(fruit::impl::meta::Type<Signature>)>
+  >;
 
   template <typename Signature>
   using NormalizedSignatureArgs = fruit::impl::meta::Eval<fruit::impl::meta::NormalizeTypeVector(
-      fruit::impl::meta::SignatureArgs(fruit::impl::meta::Type<Signature>))>;
+    fruit::impl::meta::SignatureArgs(fruit::impl::meta::Type<Signature>)
+  )>;
 
   // Prints the specified error and calls exit(1).
   static void fatal(const std::string& error);
@@ -182,23 +183,34 @@ private:
   using const_object_ptr_t = const void*;
 
   template <typename I, typename C, typename AnnotatedC>
-  static const_object_ptr_t createInjectedObjectForBind(InjectorStorage& injector,
-                                                        InjectorStorage::Graph::node_iterator node_itr);
+  static const_object_ptr_t createInjectedObjectForBind(
+    InjectorStorage& injector,
+    InjectorStorage::Graph::node_iterator node_itr
+  );
 
   template <typename C, typename T, typename AnnotatedSignature, typename Lambda>
-  static const_object_ptr_t createInjectedObjectForProvider(InjectorStorage& injector, Graph::node_iterator node_itr);
+  static const_object_ptr_t createInjectedObjectForProvider(
+    InjectorStorage& injector,
+    Graph::node_iterator node_itr
+  );
 
   template <typename I, typename C, typename T, typename AnnotatedSignature, typename Lambda>
-  static const_object_ptr_t createInjectedObjectForCompressedProvider(InjectorStorage& injector,
-                                                                      Graph::node_iterator node_itr);
+  static const_object_ptr_t createInjectedObjectForCompressedProvider(
+    InjectorStorage& injector,
+    Graph::node_iterator node_itr
+  );
 
   template <typename C, typename AnnotatedSignature>
-  static const_object_ptr_t createInjectedObjectForConstructor(InjectorStorage& injector,
-                                                               Graph::node_iterator node_itr);
+  static const_object_ptr_t createInjectedObjectForConstructor(
+    InjectorStorage& injector,
+    Graph::node_iterator node_itr
+  );
 
   template <typename I, typename C, typename AnnotatedSignature>
-  static const_object_ptr_t createInjectedObjectForCompressedConstructor(InjectorStorage& injector,
-                                                                         Graph::node_iterator node_itr);
+  static const_object_ptr_t createInjectedObjectForCompressedConstructor(
+    InjectorStorage& injector,
+    Graph::node_iterator node_itr
+  );
 
   template <typename I, typename C, typename AnnotatedCPtr>
   static object_ptr_t createInjectedObjectForMultibinding(InjectorStorage& m);
@@ -231,14 +243,20 @@ public:
   /**
    * The MemoryPool is only used during construction, the constructed object *can* outlive the memory pool.
    */
-  InjectorStorage(ComponentStorage&& storage, const std::vector<TypeId, ArenaAllocator<TypeId>>& exposed_types,
-                  MemoryPool& memory_pool);
+  InjectorStorage(
+    ComponentStorage&& storage,
+    const std::vector<TypeId, ArenaAllocator<TypeId>>& exposed_types,
+    MemoryPool& memory_pool
+  );
 
   /**
    * The MemoryPool is only used during construction, the constructed object *can* outlive the memory pool.
    */
-  InjectorStorage(const NormalizedComponentStorage& normalized_storage, ComponentStorage&& storage,
-                  MemoryPool& memory_pool);
+  InjectorStorage(
+    const NormalizedComponentStorage& normalized_storage,
+    ComponentStorage&& storage,
+    MemoryPool& memory_pool
+  );
 
   // This is just the default destructor, but we declare it here to avoid including
   // normalized_component_storage.h in fruit.h.
@@ -266,8 +284,10 @@ public:
   // and also                        to get<T>         (lazyGetPtr<Apply<NormalizeType, AnnotatedT>>(deps, dep_index))
   // dep_index is the index of the dep in `deps'.
   template <typename AnnotatedC>
-  Graph::node_iterator lazyGetPtr(Graph::edge_iterator deps, std::size_t dep_index,
-                                  Graph::node_iterator bindings_begin) const;
+  Graph::node_iterator lazyGetPtr(
+    Graph::edge_iterator deps, std::size_t dep_index,
+    Graph::node_iterator bindings_begin
+  ) const;
 
   // Returns nullptr if AnnotatedC was not bound.
   template <typename AnnotatedC>

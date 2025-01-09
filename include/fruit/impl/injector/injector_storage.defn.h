@@ -71,10 +71,12 @@ inline NormalizedBinding InjectorStorage::BindingDataNodeIter::getValue() {
 
 inline bool InjectorStorage::BindingDataNodeIter::isTerminal() {
 #if FRUIT_EXTRA_DEBUG
-  if (itr->kind != ComponentStorageEntry::Kind::BINDING_FOR_CONSTRUCTED_OBJECT &&
-      itr->kind != ComponentStorageEntry::Kind::BINDING_FOR_OBJECT_TO_CONSTRUCT_THAT_NEEDS_ALLOCATION &&
-      itr->kind != ComponentStorageEntry::Kind::BINDING_FOR_OBJECT_TO_CONSTRUCT_THAT_NEEDS_NO_ALLOCATION &&
-      itr->kind != ComponentStorageEntry::Kind::BINDING_FOR_OBJECT_TO_CONSTRUCT_WITH_UNKNOWN_ALLOCATION) {
+  if (
+    itr->kind != ComponentStorageEntry::Kind::BINDING_FOR_CONSTRUCTED_OBJECT &&
+    itr->kind != ComponentStorageEntry::Kind::BINDING_FOR_OBJECT_TO_CONSTRUCT_THAT_NEEDS_ALLOCATION &&
+    itr->kind != ComponentStorageEntry::Kind::BINDING_FOR_OBJECT_TO_CONSTRUCT_THAT_NEEDS_NO_ALLOCATION &&
+    itr->kind != ComponentStorageEntry::Kind::BINDING_FOR_OBJECT_TO_CONSTRUCT_WITH_UNKNOWN_ALLOCATION
+  ) {
     std::cerr << "Unexpected binding kind: " << (std::size_t)itr->kind << std::endl;
     FruitAssert(false);
   }
@@ -83,16 +85,20 @@ inline bool InjectorStorage::BindingDataNodeIter::isTerminal() {
 }
 
 inline const TypeId* InjectorStorage::BindingDataNodeIter::getEdgesBegin() {
-  FruitAssert(itr->kind == ComponentStorageEntry::Kind::BINDING_FOR_OBJECT_TO_CONSTRUCT_THAT_NEEDS_ALLOCATION ||
-              itr->kind == ComponentStorageEntry::Kind::BINDING_FOR_OBJECT_TO_CONSTRUCT_THAT_NEEDS_NO_ALLOCATION ||
-              itr->kind == ComponentStorageEntry::Kind::BINDING_FOR_OBJECT_TO_CONSTRUCT_WITH_UNKNOWN_ALLOCATION);
+  FruitAssert(
+    itr->kind == ComponentStorageEntry::Kind::BINDING_FOR_OBJECT_TO_CONSTRUCT_THAT_NEEDS_ALLOCATION ||
+    itr->kind == ComponentStorageEntry::Kind::BINDING_FOR_OBJECT_TO_CONSTRUCT_THAT_NEEDS_NO_ALLOCATION ||
+    itr->kind == ComponentStorageEntry::Kind::BINDING_FOR_OBJECT_TO_CONSTRUCT_WITH_UNKNOWN_ALLOCATION
+  );
   return itr->binding_for_object_to_construct.deps->deps;
 }
 
 inline const TypeId* InjectorStorage::BindingDataNodeIter::getEdgesEnd() {
-  FruitAssert(itr->kind == ComponentStorageEntry::Kind::BINDING_FOR_OBJECT_TO_CONSTRUCT_THAT_NEEDS_ALLOCATION ||
-              itr->kind == ComponentStorageEntry::Kind::BINDING_FOR_OBJECT_TO_CONSTRUCT_THAT_NEEDS_NO_ALLOCATION ||
-              itr->kind == ComponentStorageEntry::Kind::BINDING_FOR_OBJECT_TO_CONSTRUCT_WITH_UNKNOWN_ALLOCATION);
+  FruitAssert(
+    itr->kind == ComponentStorageEntry::Kind::BINDING_FOR_OBJECT_TO_CONSTRUCT_THAT_NEEDS_ALLOCATION ||
+    itr->kind == ComponentStorageEntry::Kind::BINDING_FOR_OBJECT_TO_CONSTRUCT_THAT_NEEDS_NO_ALLOCATION ||
+    itr->kind == ComponentStorageEntry::Kind::BINDING_FOR_OBJECT_TO_CONSTRUCT_WITH_UNKNOWN_ALLOCATION
+  );
   return itr->binding_for_object_to_construct.deps->deps + itr->binding_for_object_to_construct.deps->num_deps;
 }
 
@@ -237,8 +243,10 @@ inline InjectorStorage::RemoveAnnotations<AnnotatedT> InjectorStorage::get() {
 
 template <typename T>
 inline T InjectorStorage::get(InjectorStorage::Graph::node_iterator node_iterator) {
-  FruitStaticAssert(fruit::impl::meta::IsSame(fruit::impl::meta::Type<T>,
-                                              fruit::impl::meta::RemoveAnnotations(fruit::impl::meta::Type<T>)));
+  FruitStaticAssert(
+    fruit::impl::meta::IsSame(fruit::impl::meta::Type<T>,
+    fruit::impl::meta::RemoveAnnotations(fruit::impl::meta::Type<T>))
+  );
   std::lock_guard<std::recursive_mutex> lock(mutex);
   return GetSecondStage<T>()(GetFirstStage<T>()(*this, node_iterator));
 }
@@ -250,8 +258,11 @@ inline InjectorStorage::Graph::node_iterator InjectorStorage::lazyGetPtr() {
 
 template <typename AnnotatedC>
 inline InjectorStorage::Graph::node_iterator
-InjectorStorage::lazyGetPtr(Graph::edge_iterator deps, std::size_t dep_index, Graph::node_iterator bindings_begin)
-    const {
+InjectorStorage::lazyGetPtr(
+  Graph::edge_iterator deps,
+  std::size_t dep_index,
+  Graph::node_iterator bindings_begin
+) const {
   // Here we (intentionally) do not lock `mutex', since this is a read-only method that only accesses immutable data.
   Graph::node_iterator itr = deps.getNodeIterator(dep_index, bindings_begin);
   FruitAssert(bindings.find(getTypeId<AnnotatedC>()) == Graph::const_node_iterator(itr));
@@ -261,8 +272,10 @@ InjectorStorage::lazyGetPtr(Graph::edge_iterator deps, std::size_t dep_index, Gr
 
 template <typename C>
 inline const C* InjectorStorage::getPtr(Graph::node_iterator itr) {
-  FruitStaticAssert(fruit::impl::meta::IsSame(fruit::impl::meta::Type<C>,
-                                              fruit::impl::meta::NormalizeType(fruit::impl::meta::Type<C>)));
+  FruitStaticAssert(fruit::impl::meta::IsSame(
+    fruit::impl::meta::Type<C>,
+    fruit::impl::meta::NormalizeType(fruit::impl::meta::Type<C>)
+  ));
   const void* p = getPtrInternal(itr);
   return reinterpret_cast<const C*>(p);
 }
@@ -352,9 +365,10 @@ inline std::shared_ptr<char> InjectorStorage::createMultibindingVector(InjectorS
 
 template <typename I, typename C, typename AnnotatedC>
 InjectorStorage::const_object_ptr_t
-InjectorStorage::createInjectedObjectForBind(InjectorStorage& injector,
-                                             InjectorStorage::Graph::node_iterator node_itr) {
-
+InjectorStorage::createInjectedObjectForBind(
+  InjectorStorage& injector,
+  InjectorStorage::Graph::node_iterator node_itr
+) {
   InjectorStorage::Graph::node_iterator bindings_begin = injector.bindings.begin();
   const C* cPtr = injector.get<const C*>(injector.lazyGetPtr<AnnotatedC>(node_itr.neighborsBegin(), 0, bindings_begin));
   node_itr.setTerminal();
@@ -431,21 +445,34 @@ inline ComponentStorageEntry InjectorStorage::createComponentStorageEntryForBind
 // The inner operator() takes an InjectorStorage& and a Graph::edge_iterator (the type's deps) and
 // returns the injected object as a C*.
 // This takes care of move-constructing a C into the injector's own allocator if needed.
-template <typename AnnotatedSignature, typename Lambda, bool lambda_returns_pointer,
-          typename AnnotatedT = InjectorStorage::SignatureType<AnnotatedSignature>,
-          typename AnnotatedArgVector =
-              fruit::impl::meta::Eval<fruit::impl::meta::SignatureArgs(fruit::impl::meta::Type<AnnotatedSignature>)>,
-          typename Indexes =
-              fruit::impl::meta::Eval<fruit::impl::meta::GenerateIntSequence(fruit::impl::meta::VectorSize(
-                  fruit::impl::meta::SignatureArgs(fruit::impl::meta::Type<AnnotatedSignature>)))>>
+template <
+  typename AnnotatedSignature,
+  typename Lambda,
+  bool lambda_returns_pointer,
+  typename AnnotatedT = InjectorStorage::SignatureType<AnnotatedSignature>,
+  typename AnnotatedArgVector = fruit::impl::meta::Eval<fruit::impl::meta::SignatureArgs(fruit::impl::meta::Type<AnnotatedSignature>)>,
+  typename Indexes = fruit::impl::meta::Eval<fruit::impl::meta::GenerateIntSequence(
+    fruit::impl::meta::VectorSize(fruit::impl::meta::SignatureArgs(fruit::impl::meta::Type<AnnotatedSignature>))
+  )>
+>
 struct InvokeLambdaWithInjectedArgVector;
 
 // AnnotatedT is of the form C* or Annotated<Annotation, C*>
-template <typename AnnotatedSignature, typename Lambda, typename AnnotatedT, typename... AnnotatedArgs,
-          typename... Indexes>
-struct InvokeLambdaWithInjectedArgVector<AnnotatedSignature, Lambda, true /* lambda_returns_pointer */, AnnotatedT,
-                                         fruit::impl::meta::Vector<AnnotatedArgs...>,
-                                         fruit::impl::meta::Vector<Indexes...>> {
+template <
+  typename AnnotatedSignature,
+  typename Lambda,
+  typename AnnotatedT,
+  typename... AnnotatedArgs,
+  typename... Indexes
+>
+struct InvokeLambdaWithInjectedArgVector<
+  AnnotatedSignature,
+  Lambda,
+  true /* lambda_returns_pointer */,
+  AnnotatedT,
+  fruit::impl::meta::Vector<AnnotatedArgs...>,
+  fruit::impl::meta::Vector<Indexes...>
+> {
   using CPtr = InjectorStorage::RemoveAnnotations<AnnotatedT>;
   using AnnotatedC = InjectorStorage::NormalizeType<AnnotatedT>;
 
@@ -453,17 +480,20 @@ struct InvokeLambdaWithInjectedArgVector<AnnotatedSignature, Lambda, true /* lam
   CPtr operator()(InjectorStorage& injector, FixedSizeAllocator& allocator) {
     // `injector' *is* used below, but when there are no AnnotatedArgs some compilers report it as unused.
     (void)injector;
-    CPtr cPtr =
-        LambdaInvoker::invoke<Lambda, typename InjectorStorage::AnnotationRemover<
-                                          typename fruit::impl::meta::TypeUnwrapper<AnnotatedArgs>::type>::type...>(
-            injector.get<fruit::impl::meta::UnwrapType<AnnotatedArgs>>()...);
+    CPtr cPtr = LambdaInvoker::invoke<
+      Lambda,
+      typename InjectorStorage::AnnotationRemover<typename fruit::impl::meta::TypeUnwrapper<AnnotatedArgs>::type>::type...
+    >(injector.get<fruit::impl::meta::UnwrapType<AnnotatedArgs>>()...);
 
     allocator.registerExternallyAllocatedObject(cPtr);
 
     // This can happen if the user-supplied provider returns nullptr.
     if (cPtr == nullptr) {
-      InjectorStorage::fatal("attempting to get an instance for the type " + std::string(getTypeId<AnnotatedC>()) +
-                             " but the provider returned nullptr");
+      InjectorStorage::fatal(
+        "attempting to get an instance for the type " +
+        std::string(getTypeId<AnnotatedC>()) +
+        " but the provider returned nullptr"
+      );
       FRUIT_UNREACHABLE; // LCOV_EXCL_LINE
     }
 
@@ -475,14 +505,20 @@ struct InvokeLambdaWithInjectedArgVector<AnnotatedSignature, Lambda, true /* lam
   // (e.g. a shared_ptr), that happens as late as possible so that it's easier for the optimizer to optimize out some
   // operations (e.g. the increment/decrement/check of shared_ptr's reference count).
   template <typename... GetFirstStageResults>
-  FRUIT_ALWAYS_INLINE CPtr innerConstructHelper(InjectorStorage& injector,
-                                                GetFirstStageResults... getFirstStageResults) {
+  FRUIT_ALWAYS_INLINE CPtr innerConstructHelper(
+    InjectorStorage& injector,
+    GetFirstStageResults... getFirstStageResults
+  ) {
     // `injector' *is* used below, but when there are no AnnotatedArgs some compilers report it as unused.
     (void)injector;
-    return LambdaInvoker::invoke<Lambda, typename InjectorStorage::AnnotationRemover<
-                                             typename fruit::impl::meta::TypeUnwrapper<AnnotatedArgs>::type>::type...>(
-        GetSecondStage<InjectorStorage::RemoveAnnotations<fruit::impl::meta::UnwrapType<AnnotatedArgs>>>()(
-            getFirstStageResults)...);
+    return LambdaInvoker::invoke<
+      Lambda,
+      typename InjectorStorage::AnnotationRemover<typename fruit::impl::meta::TypeUnwrapper<AnnotatedArgs>::type>::type...
+    >(
+      GetSecondStage<
+        InjectorStorage::RemoveAnnotations<fruit::impl::meta::UnwrapType<AnnotatedArgs>>
+      >()(getFirstStageResults)...
+    );
   }
 
   // This is not inlined in operator() so that all the lazyGetPtr() calls happen first (instead of being interleaved
@@ -493,13 +529,20 @@ struct InvokeLambdaWithInjectedArgVector<AnnotatedSignature, Lambda, true /* lam
     // `injector' *is* used below, but when there are no AnnotatedArgs some compilers report it as unused.
     (void)injector;
     return innerConstructHelper(
-        injector, GetFirstStage<InjectorStorage::RemoveAnnotations<fruit::impl::meta::UnwrapType<AnnotatedArgs>>>()(
-                      injector, nodeItrs)...);
+      injector,
+      GetFirstStage<
+        InjectorStorage::RemoveAnnotations<fruit::impl::meta::UnwrapType<AnnotatedArgs>>
+      >()(injector, nodeItrs)...
+    );
   }
 
   FRUIT_ALWAYS_INLINE
-  CPtr operator()(InjectorStorage& injector, SemistaticGraph<TypeId, NormalizedBinding>& bindings,
-                  FixedSizeAllocator& allocator, InjectorStorage::Graph::edge_iterator deps) {
+  CPtr operator()(
+    InjectorStorage& injector,
+    SemistaticGraph<TypeId, NormalizedBinding>& bindings,
+    FixedSizeAllocator& allocator,
+    InjectorStorage::Graph::edge_iterator deps
+  ) {
     // `deps' *is* used below, but when there are no AnnotatedArgs some compilers report it as unused.
     (void)deps;
 
@@ -507,15 +550,22 @@ struct InvokeLambdaWithInjectedArgVector<AnnotatedSignature, Lambda, true /* lam
     // `bindings_begin' *is* used below, but when there are no AnnotatedArgs some compilers report it as unused.
     (void)bindings_begin;
     CPtr cPtr = outerConstructHelper(
-        injector,
-        injector.lazyGetPtr<InjectorStorage::NormalizeType<fruit::impl::meta::UnwrapType<AnnotatedArgs>>>(
-            deps, fruit::impl::meta::getIntValue<Indexes>(), bindings_begin)...);
+      injector,
+      injector.lazyGetPtr<InjectorStorage::NormalizeType<fruit::impl::meta::UnwrapType<AnnotatedArgs>>>(
+        deps,
+        fruit::impl::meta::getIntValue<Indexes>(),
+        bindings_begin
+      )...
+    );
     allocator.registerExternallyAllocatedObject(cPtr);
 
     // This can happen if the user-supplied provider returns nullptr.
     if (cPtr == nullptr) {
-      InjectorStorage::fatal("attempting to get an instance for the type " + std::string(getTypeId<AnnotatedC>()) +
-                             " but the provider returned nullptr");
+      InjectorStorage::fatal(
+        "attempting to get an instance for the type " +
+        std::string(getTypeId<AnnotatedC>()) +
+        " but the provider returned nullptr"
+      );
       FRUIT_UNREACHABLE; // LCOV_EXCL_LINE
     }
 
@@ -523,11 +573,21 @@ struct InvokeLambdaWithInjectedArgVector<AnnotatedSignature, Lambda, true /* lam
   }
 };
 
-template <typename AnnotatedSignature, typename Lambda, typename AnnotatedC, typename... AnnotatedArgs,
-          typename... Indexes>
-struct InvokeLambdaWithInjectedArgVector<AnnotatedSignature, Lambda, false /* lambda_returns_pointer */, AnnotatedC,
-                                         fruit::impl::meta::Vector<AnnotatedArgs...>,
-                                         fruit::impl::meta::Vector<Indexes...>> {
+template <
+  typename AnnotatedSignature,
+  typename Lambda,
+  typename AnnotatedC,
+  typename... AnnotatedArgs,
+  typename... Indexes
+>
+struct InvokeLambdaWithInjectedArgVector<
+  AnnotatedSignature,
+  Lambda,
+  false /* lambda_returns_pointer */,
+  AnnotatedC,
+  fruit::impl::meta::Vector<AnnotatedArgs...>,
+  fruit::impl::meta::Vector<Indexes...>
+> {
   using C = InjectorStorage::RemoveAnnotations<AnnotatedC>;
 
   FRUIT_ALWAYS_INLINE
@@ -535,9 +595,11 @@ struct InvokeLambdaWithInjectedArgVector<AnnotatedSignature, Lambda, false /* la
     // `injector' *is* used below, but when there are no AnnotatedArgs some compilers report it as unused.
     (void)injector;
     return allocator.constructObject<AnnotatedC, C&&>(
-        LambdaInvoker::invoke<Lambda, typename InjectorStorage::AnnotationRemover<
-                                          typename fruit::impl::meta::TypeUnwrapper<AnnotatedArgs>::type>::type&&...>(
-            injector.get<typename fruit::impl::meta::TypeUnwrapper<AnnotatedArgs>::type>()...));
+      LambdaInvoker::invoke<
+        Lambda,
+        typename InjectorStorage::AnnotationRemover<typename fruit::impl::meta::TypeUnwrapper<AnnotatedArgs>::type>::type&&...
+      >(injector.get<typename fruit::impl::meta::TypeUnwrapper<AnnotatedArgs>::type>()...)
+    );
   }
 
   // This is not inlined in outerConstructHelper so that when get<> needs to construct an object more complex than a
@@ -545,33 +607,50 @@ struct InvokeLambdaWithInjectedArgVector<AnnotatedSignature, Lambda, false /* la
   // (e.g. a shared_ptr), that happens as late as possible so that it's easier for the optimizer to optimize out some
   // operations (e.g. the increment/decrement/check of shared_ptr's reference count).
   template <typename... GetFirstStageResults>
-  FRUIT_ALWAYS_INLINE C* innerConstructHelper(InjectorStorage& injector, FixedSizeAllocator& allocator,
-                                              GetFirstStageResults... getFirstStageResults) {
+  FRUIT_ALWAYS_INLINE C* innerConstructHelper(
+    InjectorStorage& injector,
+    FixedSizeAllocator& allocator,
+    GetFirstStageResults... getFirstStageResults
+  ) {
     // `injector' *is* used below, but when there are no AnnotatedArgs some compilers report it as unused.
     (void)injector;
     return allocator.constructObject<AnnotatedC, C&&>(
-        LambdaInvoker::invoke<Lambda, typename InjectorStorage::AnnotationRemover<
-                                          typename fruit::impl::meta::TypeUnwrapper<AnnotatedArgs>::type>::type...>(
-            GetSecondStage<typename InjectorStorage::AnnotationRemover<
-                typename fruit::impl::meta::TypeUnwrapper<AnnotatedArgs>::type>::type>()(getFirstStageResults)...));
+      LambdaInvoker::invoke<
+        Lambda, typename InjectorStorage::AnnotationRemover<typename fruit::impl::meta::TypeUnwrapper<AnnotatedArgs>::type>::type...
+      >(
+        GetSecondStage<
+          typename InjectorStorage::AnnotationRemover<typename fruit::impl::meta::TypeUnwrapper<AnnotatedArgs>::type>::type
+        >()(getFirstStageResults)...
+      )
+    );
   }
 
   // This is not inlined in operator() so that all the lazyGetPtr() calls happen first (instead of being interleaved
   // with the get() calls). The lazyGetPtr() calls don't branch, while the get() calls branch on the result of the
   // lazyGetPtr()s, so it's faster to execute them in this order.
   template <typename... NodeItrs>
-  FRUIT_ALWAYS_INLINE C* outerConstructHelper(InjectorStorage& injector, FixedSizeAllocator& allocator,
-                                              NodeItrs... nodeItrs) {
+  FRUIT_ALWAYS_INLINE C* outerConstructHelper(
+    InjectorStorage& injector,
+    FixedSizeAllocator& allocator,
+    NodeItrs... nodeItrs
+  ) {
     // `injector' *is* used below, but when there are no AnnotatedArgs some compilers report it as unused.
     (void)injector;
     return innerConstructHelper(
-        injector, allocator,
-        GetFirstStage<InjectorStorage::RemoveAnnotations<fruit::impl::meta::UnwrapType<AnnotatedArgs>>>()(injector,
-                                                                                                          nodeItrs)...);
+      injector,
+      allocator,
+      GetFirstStage<
+        InjectorStorage::RemoveAnnotations<fruit::impl::meta::UnwrapType<AnnotatedArgs>>
+      >()(injector, nodeItrs)...
+    );
   }
 
-  C* operator()(InjectorStorage& injector, SemistaticGraph<TypeId, NormalizedBinding>& bindings,
-                FixedSizeAllocator& allocator, InjectorStorage::Graph::edge_iterator deps) {
+  C* operator()(
+    InjectorStorage& injector,
+    SemistaticGraph<TypeId, NormalizedBinding>& bindings,
+    FixedSizeAllocator& allocator,
+    InjectorStorage::Graph::edge_iterator deps
+  ) {
     InjectorStorage::Graph::node_iterator bindings_begin = bindings.begin();
     // `bindings_begin' *is* used below, but when there are no AnnotatedArgs some compilers report it as unused.
     (void)bindings_begin;
@@ -582,9 +661,13 @@ struct InvokeLambdaWithInjectedArgVector<AnnotatedSignature, Lambda, false /* la
     // `injector' *is* used below, but when there are no AnnotatedArgs some compilers report it as unused.
     (void)injector;
     C* p = outerConstructHelper(
-        injector, allocator,
-        injector.lazyGetPtr<InjectorStorage::NormalizeType<fruit::impl::meta::UnwrapType<AnnotatedArgs>>>(
-            deps, fruit::impl::meta::getIntValue<Indexes>(), bindings_begin)...);
+      injector,
+      allocator,
+      injector.lazyGetPtr<InjectorStorage::NormalizeType<fruit::impl::meta::UnwrapType<AnnotatedArgs>>>(
+        deps,
+        fruit::impl::meta::getIntValue<Indexes>(), bindings_begin
+      )...
+    );
     return p;
   }
 };
